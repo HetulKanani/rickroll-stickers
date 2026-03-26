@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
 import android.text.TextUtils;
+import java.util.List;
 
 import java.io.IOException;
 
@@ -123,16 +124,23 @@ public class StickerContentProvider extends ContentProvider {
 
     @Override
     public AssetFileDescriptor openAssetFile(Uri uri, String mode) {
-        if (uriMatcher.match(uri) == STICKERS_ASSET) {
-            // URI format: stickers_asset/{pack_id}/{filename}
-            String[] segments = uri.getPathSegments().toArray(new String[0]);
-            if (segments.length == 3) {
-                String filename = segments[2];
-                try {
-                    return getContext().getAssets().openFd("contents/" + filename);
-                } catch (IOException e) {
-                    return null;
-                }
+        List<String> segments = uri.getPathSegments();
+        // URI: stickers_asset/{pack_id}/{filename}
+        if (segments.size() == 3) {
+            String filename = segments.get(2);
+            try {
+                return getContext().getAssets().openFd("contents/" + filename);
+            } catch (IOException e) {
+                return null;
+            }
+        }
+        // Fallback: last segment is filename
+        if (segments.size() >= 1) {
+            String filename = segments.get(segments.size() - 1);
+            try {
+                return getContext().getAssets().openFd("contents/" + filename);
+            } catch (IOException e) {
+                return null;
             }
         }
         return null;
